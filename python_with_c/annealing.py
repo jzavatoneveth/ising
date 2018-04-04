@@ -6,6 +6,7 @@ def T_anneal(T, ii, num_steps, num_burnin):
 
     return float(T_a)
 
+
 def B_anneal(B, ii, num_steps, num_burnin):
 
     #implement annealing code here

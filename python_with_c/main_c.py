@@ -21,7 +21,7 @@ def calculate_and_save_values(lattice, Msamp,Esamp,num_analysis,index,temp,data_
         data_array = [np.abs(M_mean),M_std,E_mean,E_std]
     
         #write data to CSV file
-        header_array = ['Temperature','Magnetizatio n Mean','Magnetization Std Dev','Energy Mean','Energy Std Dev']
+        header_array = ['Temperature','Magnetization Mean','Magnetization Std Dev','Energy Mean','Energy Std Dev']
         append_data_to_file(data_filename, header_array) if index == 0 else None
         append_data_to_file(data_filename, data_array, temp)
 
