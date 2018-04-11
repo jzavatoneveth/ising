@@ -24,8 +24,10 @@ def run_simulation(index,temp,n,num_steps,num_burnin,num_analysis,flip_prop,j,b,
             E_mean = np.average(Esamp[-num_analysis:])
             M_std = np.std(Msamp[-num_analysis:])
             E_std = np.std(Esamp[-num_analysis:])
+            cv = (1 / (temp * temp)) * (E_std ** 2)
+            chi = (1 / temp) * (M_std ** 2)
 
-            data_array = [np.abs(M_mean),M_std,E_mean,E_std]
+            data_array = [np.abs(M_mean),M_std,E_mean,E_std,cv,chi]
             data_listener.put([temp]+data_array)
 
             corr = lattice.calc_auto_correlation()
@@ -172,7 +174,7 @@ def run_processes(processes,t_min,t_max,t_step,n,num_steps,num_burnin,num_analys
     corr_watcher = pool.apply_async(listener, args=(corr_listener, corr_filename,))
 
     #fire off workers 
-    jobs = [pool.apply_async(run_simulation, args=(index,temp,n,num_steps,num_burnin,num_analysis,flip_prop,j,b,data_filename,corr_filename,data_listener,corr_listener,)) for index,temp in enumerate(T)]
+    jobs = [pool.apply_async(run_simulation, args=(index,temp,n,num_steps,num_burnin,num_analysis,flip_prop,j,b,data_filename,corr_filename,data_listener,corr_listener)) for index,temp in enumerate(T)]
 
     # collect results from the workers through the pool result queue   
     [job.get() for job in jobs]
@@ -183,4 +185,4 @@ def run_processes(processes,t_min,t_max,t_step,n,num_steps,num_burnin,num_analys
     pool.close()
 
 if __name__ == "__main__":
-   main()
+    main()
