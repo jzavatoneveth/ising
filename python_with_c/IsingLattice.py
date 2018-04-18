@@ -41,10 +41,14 @@ class IsingLattice(object):
         return float( libc.get_M(self.matrix_ptr) )
 
     def calc_auto_correlation(self):
+        self.auto_correlation = []
+
         libc.calc_auto_correlation(self.matrix_ptr)
-        for i in range(1,int(self.N/2)):
+
+        for i in range(1, int(self.N/2)):
             val = libc.auto_correlation(self.matrix_ptr, i)
-            self.auto_correlation.append([i,val])
+            self.auto_correlation.append([i, val])
+
         return self.auto_correlation
 
     def set_Nflip(self,npick):

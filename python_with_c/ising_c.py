@@ -2,10 +2,10 @@ import random
 import numpy as np
 from annealing import B_anneal, T_anneal
 
-try:
-    __IPYTHON__
-except:
-    from tqdm import tqdm
+# try:
+#     __IPYTHON__
+# except:
+#     from tqdm import tqdm
 
 def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
 
@@ -21,31 +21,33 @@ def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
     # flip_prop = Total ratio of spins to possibly flip per step
 
     # Initialize variables
-    M,E = 0,0 # Magnetization and Energy Initial Values
-    Msamp, Esamp = [],[] #Arrays to hold magnetization and energy values
+    M, E = 0, 0 # Magnetization and Energy Initial Values
+    Msamp, Esamp = [], [] #Arrays to hold magnetization and energy values
     Tstep, Bstep = [], []
 
     lattice.randomize_spins()
 
-    try:
-        __IPYTHON__
-        steps = range(num_steps)
-    except:
-        if disable_tqdm:
-            steps = range(num_steps)
-        else:
-            steps = tqdm(range(num_steps))
+    steps = range(num_steps)
+
+    # try:
+    #     __IPYTHON__
+    #     steps = range(num_steps)
+    # except:
+    #     if disable_tqdm:
+    #         steps = range(num_steps)
+    #     else:
+    #         steps = tqdm(range(num_steps))
 
     # Evolve the system
     for step in steps:
-        try:
-            __IPYTHON__
-        except:
-            if disable_tqdm:
-                pass
-            else:
-                steps.set_description("Working on T = %.2f" % T)
-                steps.refresh() # to show immediately the update
+        # try:
+        #     __IPYTHON__
+        # except:
+        #     if disable_tqdm:
+        #         pass
+        #     else:
+        #         steps.set_description("Working on T = %.2f" % T)
+        #         steps.refresh() # to show immediately the update
 
         #implement annealing in annealing.py file
 

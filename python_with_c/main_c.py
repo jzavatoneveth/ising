@@ -7,7 +7,7 @@ import numpy as np
 import logging
 import matplotlib.pyplot as plt
 from IsingLattice import IsingLattice
-from tqdm import tqdm #fancy progress bar generator
+# from tqdm import tqdm #fancy progress bar generator
 from ising_c import run_ising #import run_ising function from ising.py
 
 
@@ -77,10 +77,9 @@ def calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,
 @click.option('--flip_prop', default=0.1, help='Proportion of Spins to Consider Flipping per Step',type=float)
 
 @click.option('--output', default='data', help='Directory Name for Data Output',type=str)
-@click.option('--plots', default=False, help='Turn Automatic Plot Creation Off or On',type=bool)
 @click.option('--savespins', default=True, help='Save spin matrices', type=bool)
 
-def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,flip_prop,output,plots, savespins):
+def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,flip_prop,output, savespins):
 
     time_start = time.time()
 
@@ -97,33 +96,18 @@ def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,fl
 
     write_sim_parameters(data_filename,corr_filename,n,num_steps,num_analysis,num_burnin,j,b,flip_prop)
 
-    if plots:
-        #initialize vars for plotting values
-        temp_arr, M_mean_arr, E_mean_arr, M_std_arr, E_std_arr = [],[],[],[],[]
-
     print('\nSimulation Started! Data will be written to ' + data_filename + '\n')
 
-    temp_range = tqdm(T) #set fancy progress bar range
-    for index, temp in enumerate(temp_range):
+    # temp_range = tqdm(T) #set fancy progress bar range
+    for index, temp in enumerate(T):
 
-        #show current temperature
-        temp_range.set_description("Simulation Progress");
+        print('Working on temp %d: %f' % (index, temp))
 
-        # try:
-        #run the Ising model
+        # Run the Ising model
         Msamp, Esamp, Tstep, Bstep = run_ising(lattice, temp, num_steps, num_burnin, j, b)
 
-
-        #get and save statistical values
-        if calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,index,temp,data_filename,corr_filename,iter_filename, spin_save_dir):
-            if plots:
-                #for plotting
-                M_mean, E_mean, M_std, E_std = get_plot_values(temp,Msamp,Esamp,num_analysis)
-                temp_arr.append(temp)
-                M_mean_arr.append(M_mean)
-                E_mean_arr.append(E_mean)
-                M_std_arr.append(M_std)
-                E_std_arr.append(E_std)
+        # Get and save statistical values
+        calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,index,temp,data_filename,corr_filename,iter_filename, spin_save_dir)
 
         # except KeyboardInterrupt:
         #     print("\n\nProgram Terminated. Good Bye!")
@@ -132,36 +116,11 @@ def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,fl
         # except:
         #     logging.error("Temp="+str(temp)+": Simulation Failed. No Data Written")
 
-
     print('\n ------ Time start(%f) Time finished(%f), total time(%f)'%(time_start, time.time(), time.time()-time_start))
     print('\n\nSimulation Finished! Data written to '+ data_filename)
 
     lattice.free_memory()
-    if plots:
-        plot_graphs(temp_arr, M_mean_arr, M_std_arr, E_mean_arr, E_std_arr)
 
-def get_plot_values(temp,Msamp,Esamp,num_analysis): #only for plotting at end
-    try:
-        M_mean = np.average(Msamp[-num_analysis:])
-        E_mean = np.average(Esamp[-num_analysis:])
-        M_std = np.std(Msamp[-num_analysis:])
-        E_std = np.std(Esamp[-num_analysis:])
-        return M_mean, E_mean, M_std, E_std
-    except:
-        logging.error("Temp={0}: Error getting plot values".format(temp))
-        return False
-
-def plot_graphs(temp_arr,M_mean_arr,M_std_arr,E_mean_arr,E_std_arr): #plot graphs at end
-    plt.figure(1)
-    plt.ylim(0,1)
-    plt.errorbar(temp_arr, np.absolute(M_mean_arr), yerr=M_std_arr, uplims=True, lolims=True,fmt='o')
-    plt.xlabel('Temperature')
-    plt.ylabel('Magnetization')
-    plt.figure(2)
-    plt.errorbar(temp_arr, E_mean_arr, yerr=E_std_arr, fmt='o')
-    plt.xlabel('Temperature')
-    plt.ylabel('Energy')
-    plt.show()
 
 def check_step_values(num_steps,num_analysis,num_burnin): #simulation size checks and exceptions
     if (num_burnin > num_steps):
@@ -199,7 +158,7 @@ def write_sim_parameters(data_filename,corr_filename,n,num_steps,num_analysis,nu
             writer = csv.writer(csv_file, delimiter=',', lineterminator='\n')
             #Write simulations parameters to CSV file
             writer.writerow(['Lattice Size (NxN)','Total Steps','Steps Used in Analysis','Burnin Steps','Interaction Strength','Applied Mag Field','Spin Prop'])
-            writer.writerow([n,num_steps,num_analysis,num_burnin,j,b,flip_prop])
+            writer.writerow([n, num_steps, num_analysis, num_burnin, j, b, flip_prop])
             writer.writerow([])
     except:
         logging.error('Could not save simulation parameters. Exiting simulation')
@@ -210,7 +169,7 @@ def get_temp_array(t_min,t_max,t_step):
         raise ValueError('T_min cannot be greater than T_max. Exiting Simulation')
         sys.exit()
     try:
-        T = np.arange(t_min,t_max,t_step).tolist()
+        T = np.arange(t_min, t_max, t_step).tolist()
         return T
     except:
         raise ValueError('Error creating temperature array. Exiting simulation.')
