@@ -11,44 +11,55 @@ from tqdm import tqdm #fancy progress bar generator
 from ising_c import run_ising #import run_ising function from ising.py
 
 
-def calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,index, temp, data_filename, corr_filename,iter_filename):
+def calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,index, temp, data_filename, corr_filename,iter_filename, spin_save_dir):
 
-    try:
-        # Calculate statistical values
-        M_mean = np.average(Msamp[-num_analysis:])
-        E_mean = np.average(Esamp[-num_analysis:])
-        M_std = np.std(Msamp[-num_analysis:])
-        E_std = np.std(Esamp[-num_analysis:])
-        cv = (1 / (temp * temp)) * (E_std ** 2)
-        chi = (1 / temp) * (M_std ** 2)
+    # try:
+    # Calculate statistical values
+    M_mean = np.average(Msamp[-num_analysis:])
+    E_mean = np.average(Esamp[-num_analysis:])
+    M_std = np.std(Msamp[-num_analysis:])
+    E_std = np.std(Esamp[-num_analysis:])
+    cv = (1 / (temp * temp)) * (E_std ** 2)
+    chi = (1 / temp) * (M_std ** 2)
 
-        data_array = [np.abs(M_mean), M_std, E_mean, E_std, cv, chi]
-    
-        # Write data to CSV file
-        header_array = ['Temperature', 'Magnetization Mean', 'Magnetization Std Dev', 'Energy Mean', 'Energy Std Dev', 'SpecificHeat', 'Susceptibility']
-        append_data_to_file(data_filename, header_array) if index == 0 else None
-        append_data_to_file(data_filename, data_array, temp)
+    data_array = [np.abs(M_mean), M_std, E_mean, E_std, cv, chi]
 
-        # Get correlation function
-        # corr = compute_autocorrelation(spin)
-        corr = lattice.calc_auto_correlation()
+    # Write data to CSV file
+    header_array = ['Temperature', 'Magnetization Mean', 'Magnetization Std Dev', 'Energy Mean', 'Energy Std Dev', 'SpecificHeat', 'Susceptibility']
+    append_data_to_file(data_filename, header_array) if index == 0 else None
+    append_data_to_file(data_filename, data_array, temp)
 
-        # Write correlation function to CSV file
-        header_array = ['Temperature', 'K', 'Spatial Spin Correlation']
-        append_data_to_file(corr_filename, header_array) if index == 0 else None
-        [append_data_to_file(corr_filename, corr_value, temp) for corr_value in corr]
+    # Get correlation function
+    # corr = compute_autocorrelation(spin)
+    corr = lattice.calc_auto_correlation()
 
-        # Write updates for each iteration to CSV file
-        header_array = ['TargetTemperature', 'Iteration', 'T', 'B', 'Magnetization', 'Energy']
-        append_data_to_file(iter_filename, header_array) if index == 0 else None
-        [append_data_to_file(iter_filename, [temp, n, t, b, mag, energy]) if n % 10 is 0 else None
-         for n, (t, b, mag, energy) in enumerate(zip(Tstep, Bstep, Msamp, Esamp))]
+    # Write correlation function to CSV file
+    header_array = ['Temperature', 'K', 'Spatial Spin Correlation']
+    append_data_to_file(corr_filename, header_array) if index == 0 else None
+    [append_data_to_file(corr_filename, corr_value, temp) for corr_value in corr]
 
-        return True
+    # Write updates for each iteration to CSV file
+    header_array = ['TargetTemperature', 'Iteration', 'T', 'B', 'Magnetization', 'Energy']
+    append_data_to_file(iter_filename, header_array) if index == 0 else None
+    [append_data_to_file(iter_filename, [temp, n, t, b, mag, energy]) if n % 10 is 0 else None
+     for n, (t, b, mag, energy) in enumerate(zip(Tstep, Bstep, Msamp, Esamp))]
 
-    except:
-        logging.error("Temp="+str(temp)+": Statistical Calculation Failed. No Data Written.")
-        return False
+    if spin_save_dir is not None:
+        spinmat = lattice.get_numpy_spin_matrix()
+        fpath = os.path.join(spin_save_dir, "spin_matrix_T%f.csv" % temp)
+        np.savetxt(fpath, spinmat, delimiter=',')
+
+        fpath = os.path.join(spin_save_dir, "magnetization_T%f.csv" % temp)
+        np.savetxt(fpath, Msamp, delimiter=',')
+
+        fpath = os.path.join(spin_save_dir, "energy_T%f.csv" % temp)
+        np.savetxt(fpath, Esamp, delimiter=',')
+
+    return True
+
+    # except:
+    #     logging.error("Temp="+str(temp)+": Statistical Calculation Failed. No Data Written.")
+    #     return False
 
 #simulation options (enter python main.py --help for details)
 @click.command()
@@ -66,9 +77,10 @@ def calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,
 @click.option('--flip_prop', default=0.1, help='Proportion of Spins to Consider Flipping per Step',type=float)
 
 @click.option('--output', default='data', help='Directory Name for Data Output',type=str)
-@click.option('--plots', default=True, help='Turn Automatic Plot Creation Off or On',type=bool)
+@click.option('--plots', default=False, help='Turn Automatic Plot Creation Off or On',type=bool)
+@click.option('--savespins', default=True, help='Save spin matrices', type=bool)
 
-def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,flip_prop,output,plots):
+def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,flip_prop,output,plots, savespins):
 
     time_start = time.time()
 
@@ -80,6 +92,8 @@ def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,fl
     T = get_temp_array(t_min, t_max, t_step)
 
     data_filename, corr_filename, iter_filename = get_filenames(output)
+
+    spin_save_dir = os.path.dirname(data_filename) if savespins else None
 
     write_sim_parameters(data_filename,corr_filename,n,num_steps,num_analysis,num_burnin,j,b,flip_prop)
 
@@ -95,27 +109,28 @@ def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,fl
         #show current temperature
         temp_range.set_description("Simulation Progress");
 
-        try:
-            #run the Ising model
-            Msamp, Esamp, Tstep, Bstep = run_ising(lattice, temp, num_steps, num_burnin, j, b)
+        # try:
+        #run the Ising model
+        Msamp, Esamp, Tstep, Bstep = run_ising(lattice, temp, num_steps, num_burnin, j, b)
 
-            #get and save statistical values
-            if calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,index,temp,data_filename,corr_filename,iter_filename):
-                if plots:
-                    #for plotting
-                    M_mean, E_mean, M_std, E_std = get_plot_values(temp,Msamp,Esamp,num_analysis)
-                    temp_arr.append(temp)
-                    M_mean_arr.append(M_mean)
-                    E_mean_arr.append(E_mean)
-                    M_std_arr.append(M_std)
-                    E_std_arr.append(E_std)
 
-        except KeyboardInterrupt:
-            print("\n\nProgram Terminated. Good Bye!")
-            sys.exit()
+        #get and save statistical values
+        if calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,index,temp,data_filename,corr_filename,iter_filename, spin_save_dir):
+            if plots:
+                #for plotting
+                M_mean, E_mean, M_std, E_std = get_plot_values(temp,Msamp,Esamp,num_analysis)
+                temp_arr.append(temp)
+                M_mean_arr.append(M_mean)
+                E_mean_arr.append(E_mean)
+                M_std_arr.append(M_std)
+                E_std_arr.append(E_std)
 
-        except:
-            logging.error("Temp="+str(temp)+": Simulation Failed. No Data Written")
+        # except KeyboardInterrupt:
+        #     print("\n\nProgram Terminated. Good Bye!")
+        #     sys.exit()
+        #
+        # except:
+        #     logging.error("Temp="+str(temp)+": Simulation Failed. No Data Written")
 
 
     print('\n ------ Time start(%f) Time finished(%f), total time(%f)'%(time_start, time.time(), time.time()-time_start))
@@ -161,8 +176,8 @@ def get_filenames(dirname): #make data folder if doesn't exist, then specify fil
     try:
         if not os.path.exists(dirname):
             os.makedirs(dirname)
-        data_filename = os.path.join(dirname,'data_'+str(time.strftime("%Y%m%d-%H%M%S"))+".csv")
-        corr_filename = os.path.join(dirname,'corr_'+str(time.strftime("%Y%m%d-%H%M%S"))+".csv")
+        data_filename = os.path.join(dirname, 'data_'+str(time.strftime("%Y%m%d-%H%M%S"))+".csv")
+        corr_filename = os.path.join(dirname, 'corr_'+str(time.strftime("%Y%m%d-%H%M%S"))+".csv")
         iter_filename = os.path.join(dirname, 'iter_' + str(time.strftime("%Y%m%d-%H%M%S")) + ".csv")
 
         #Write simulation parameters to file
@@ -179,6 +194,7 @@ def write_sim_parameters(data_filename,corr_filename,n,num_steps,num_analysis,nu
             writer.writerow(['Lattice Size (NxN)','Total Steps','Steps Used in Analysis','Burnin Steps','Interaction Strength','Applied Mag Field','Spin Prop'])
             writer.writerow([n,num_steps,num_analysis,num_burnin,j,b,flip_prop])
             writer.writerow([])
+
         with open(corr_filename,'w') as csv_file:
             writer = csv.writer(csv_file, delimiter=',', lineterminator='\n')
             #Write simulations parameters to CSV file

@@ -23,6 +23,8 @@ def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
     # Initialize variables
     M,E = 0,0 # Magnetization and Energy Initial Values
     Msamp, Esamp = [],[] #Arrays to hold magnetization and energy values
+    Tstep, Bstep = [], []
+
     lattice.randomize_spins()
 
     try:
@@ -54,5 +56,7 @@ def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
 
         Msamp.append( lattice.get_M() )
         Esamp.append( lattice.get_E() )
+        Tstep.append(T_step)
+        Bstep.append(B_step)
 
-    return Msamp, Esamp
+    return Msamp, Esamp, Tstep, Bstep
