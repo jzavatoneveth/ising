@@ -133,11 +133,14 @@ def check_step_values(num_steps,num_analysis,num_burnin): #simulation size check
 
 def get_filenames(dirname): #make data folder if doesn't exist, then specify filename
     try:
+        timestr = str(time.strftime("%Y%m%d-%H%M%S"))
+        dirname = os.path.join(dirname, 'ising_data_' + timestr)
+
         if not os.path.exists(dirname):
             os.makedirs(dirname)
-        data_filename = os.path.join(dirname, 'data_'+str(time.strftime("%Y%m%d-%H%M%S"))+".csv")
-        corr_filename = os.path.join(dirname, 'corr_'+str(time.strftime("%Y%m%d-%H%M%S"))+".csv")
-        iter_filename = os.path.join(dirname, 'iter_' + str(time.strftime("%Y%m%d-%H%M%S")) + ".csv")
+        data_filename = os.path.join(dirname, 'data_'+ timestr +".csv")
+        corr_filename = os.path.join(dirname, 'corr_'+ timestr +".csv")
+        iter_filename = os.path.join(dirname, 'iter_' + timestr + ".csv")
 
         #Write simulation parameters to file
         return data_filename, corr_filename, iter_filename
