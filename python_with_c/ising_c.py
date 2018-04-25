@@ -7,7 +7,7 @@ from annealing import B_anneal, T_anneal
 # except:
 #     from tqdm import tqdm
 
-def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
+def run_ising(lattice, T,num_steps,num_burnin,J,B, T0, B0, disable_tqdm=False):
 
     # Description of parameters:
     # N = Grid Size
@@ -51,8 +51,8 @@ def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
 
         #implement annealing in annealing.py file
 
-        T_step = T_anneal(T, step, num_steps, num_burnin)
-        B_step = B_anneal(B, step, num_steps, num_burnin)
+        T_step = T_anneal(T, T0, step, num_steps, num_burnin)
+        B_step = B_anneal(B, B0, step, num_steps, num_burnin)
 
         lattice.step(T_step, B_step)
 

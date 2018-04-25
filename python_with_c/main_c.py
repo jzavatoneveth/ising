@@ -79,7 +79,11 @@ def calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,
 @click.option('--output', default='data', help='Directory Name for Data Output',type=str)
 @click.option('--savespins', default=True, help='Save spin matrices', type=bool)
 
-def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,flip_prop,output, savespins):
+@click.option('--t0', default=4, help='Initial temperature', type=bool)
+@click.option('--b0', default=4, help='Initial magnetic field', type=bool)
+
+
+def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,flip_prop,output, savespins, t0, b0):
 
     time_start = time.time()
 
@@ -104,7 +108,7 @@ def run_simulation(t_min,t_max,t_step,n,num_steps,num_analysis,num_burnin,j,b,fl
         print('Working on temp %d: %f' % (index, temp))
 
         # Run the Ising model
-        Msamp, Esamp, Tstep, Bstep = run_ising(lattice, temp, num_steps, num_burnin, j, b)
+        Msamp, Esamp, Tstep, Bstep = run_ising(lattice, temp, num_steps, num_burnin, j, b, t0, b0)
 
         # Get and save statistical values
         calculate_and_save_values(lattice, Msamp, Esamp, Tstep, Bstep, num_analysis,index,temp,data_filename,corr_filename,iter_filename, spin_save_dir)
