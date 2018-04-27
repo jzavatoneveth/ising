@@ -7,7 +7,7 @@ from annealing import B_anneal, T_anneal
 # except:
 #     from tqdm import tqdm
 
-def run_ising(lattice, T,num_steps,num_burnin,J,B, T0, B0, disable_tqdm=False):
+def run_ising(lattice, T,num_steps,num_burnin,J,B, T0=-1, B0=-1, disable_tqdm=False):
 
     # Description of parameters:
     # N = Grid Size
@@ -23,7 +23,6 @@ def run_ising(lattice, T,num_steps,num_burnin,J,B, T0, B0, disable_tqdm=False):
     # Initialize variables
     M, E = 0, 0 # Magnetization and Energy Initial Values
     Msamp, Esamp = [], [] #Arrays to hold magnetization and energy values
-    Tstep, Bstep = [], []
 
     lattice.randomize_spins()
 
@@ -56,9 +55,7 @@ def run_ising(lattice, T,num_steps,num_burnin,J,B, T0, B0, disable_tqdm=False):
 
         lattice.step(T_step, B_step)
 
-        Msamp.append( lattice.get_M() )
-        Esamp.append( lattice.get_E() )
-        Tstep.append(T_step)
-        Bstep.append(B_step)
+        Msamp.append(lattice.get_M())
+        Esamp.append(lattice.get_E())
 
-    return Msamp, Esamp, Tstep, Bstep
+    return Msamp, Esamp

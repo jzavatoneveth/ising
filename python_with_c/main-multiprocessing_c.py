@@ -104,16 +104,15 @@ def get_filenames(dirname): #make data folder if doesn't exist, then specify fil
 
 
 def get_temp_array(t_min,t_max,t_step):
-    if (t_min > t_max):
+    if t_min > t_max:
         raise ValueError('T_min cannot be greater than T_max. Exiting Simulation')
-    try:
-        # Nasty replacement to deal with numpy.arange's bad handling of floating point round-off
+    elif (t_max - t_min) < t_step:
+        return [t_min]
+    else:
+        # Pure Python replacement to deal with numpy.arange's bad handling of floating point round-off
         n_steps = int(ceil((float(t_max) - float(t_min))/float(t_step)))
-        T = np.linspace(t_min, t_max, n_steps).tolist()
+        T = [t_min + t_step * float(x) for x in range(0, n_steps)]
         return T
-
-    except:
-        raise ValueError('Error creating temperature array. Exiting simulation.')
 
 
 def write_sim_parameters(data_filename,corr_filename,n,num_steps,num_analysis,num_burnin,j,b,flip_prop):
@@ -147,23 +146,6 @@ def append_data_to_file(filename,data_array,temp=False):
                 writer.writerow(data_array)
     except:
         logging.error("Temp={0}: Error Writing to File".format(temp))
-
-
-def compute_autocorrelation(spin):
-    n = len(spin)
-    corr_array = []
-    for k in range(1,int(n/2)):
-        col_mean, row_mean = spin.mean(axis=0),spin.mean(axis=1)
-        #compute r values for rows and cols
-        r_col = [np.multiply(spin[j,:]-col_mean,spin[(j+k)%n,:]-col_mean) for j in range(1,n)]
-        r_row = [np.multiply(spin[:,j]-row_mean,spin[:,(j+k)%n]-row_mean) for j in range(1,n)]
-        #normalize r values
-        r_col = np.divide(r_col,float(n))
-        r_row = np.divide(r_row,float(n))
-        #calculate corr for k and add it to array
-        corr = (r_col.mean() + r_row.mean())/2.0
-        corr_array.append([k,corr])
-    return corr_array
 
 
 def run_processes(processes, t_min, t_max, t_step, n, num_steps, num_burnin, num_analysis, flip_prop, j, b,
