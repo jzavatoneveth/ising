@@ -2,10 +2,6 @@ import random
 import numpy as np
 from annealing import B_anneal, T_anneal
 
-# try:
-#     __IPYTHON__
-# except:
-#     from tqdm import tqdm
 
 def run_ising(lattice, T,num_steps,num_burnin,J,B, T0=-1, B0=-1, disable_tqdm=False):
 
