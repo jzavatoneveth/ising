@@ -7,7 +7,8 @@ try:
 except:
     from tqdm import tqdm
 
-def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
+
+def run_ising(lattice, T, num_steps, num_burnin, J, B, disable_tqdm=False):
 
     # Description of parameters:
     # N = Grid Size
@@ -21,8 +22,8 @@ def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
     # flip_prop = Total ratio of spins to possibly flip per step
 
     # Initialize variables
-    M,E = 0,0 # Magnetization and Energy Initial Values
-    Msamp, Esamp = [],[] #Arrays to hold magnetization and energy values
+    M, E = 0, 0  # Magnetization and Energy Initial Values
+    Msamp, Esamp = [], []  #Arrays to hold magnetization and energy values
     lattice.randomize_spins()
 
     try:
@@ -43,7 +44,7 @@ def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
                 pass
             else:
                 steps.set_description("Working on T = %.2f" % T)
-                steps.refresh() # to show immediately the update
+                steps.refresh()  # to show immediately the update
 
         #implement annealing in annealing.py file
 
@@ -52,7 +53,7 @@ def run_ising(lattice, T,num_steps,num_burnin,J,B,disable_tqdm=False):
 
         lattice.step(T_step, B_step)
 
-        Msamp.append( lattice.get_M() )
-        Esamp.append( lattice.get_E() )
+        Msamp.append(lattice.get_M())
+        Esamp.append(lattice.get_E())
 
     return Msamp, Esamp
